@@ -179,10 +179,16 @@ defmodule Pdf.Page do
 
   def text_at(page, {x, y}, attributed_text, opts) when is_list(attributed_text) do
     attributed_text = annotate_attributed_text(attributed_text, page, opts)
-
+    text_cmd = if Keyword.has_key?(opts, :rotate) do
+      sin = Keyword.get(opts, :rotate) |> deg2rad() |> :math.sin()
+      cos = Keyword.get(opts, :rotate) |> deg2rad() |> :math.cos()
+      [cos, -1 * sin, sin, cos, x, y, "Tm"]
+    else
+      [x, y, "Td"]
+    end
     page
     |> begin_text()
-    |> push([x, y, "Td"])
+    |> push(text_cmd)
     |> print_attributed_line(attributed_text)
     |> end_text()
     |> set_cursor(y - line_height(page, attributed_text))
@@ -192,6 +198,11 @@ defmodule Pdf.Page do
     text_at(page, xy, [text], opts)
   end
 
+  defp deg2rad(x) do
+    rad_in_deg = 180 / :math.pi()
+    x / rad_in_deg
+  end
+  
   defp merge_same_opts([]), do: []
 
   defp merge_same_opts([{text, width, opts}, {text2, width2, opts} | tail]) do

@@ -221,7 +221,7 @@ defmodule Pdf.PageTest do
           font_size: 14,
           color: :red
         )
-
+      
       assert export(page) == """
              BT
              /F1 12 Tf
@@ -232,6 +232,27 @@ defmodule Pdf.PageTest do
              0.0 0.0 0.0 rg
              ET
              """
+    end
+    @fourty_five  0.7071067811865476
+    test "Rotate Text on page", %{page: page} do
+      page = Page.set_font(page, "Helvetica", 12)
+      matrix = [@fourty_five,  -1 * @fourty_five, @fourty_five, @fourty_five]
+      IO.inspect(matrix)
+      page =
+        Page.text_at(page, {10, 20}, [{"Hello world", color: :blue}],
+          rotate: 45
+        )
+
+      assert export(page) == """
+      BT
+      /F1 12 Tf
+      0.7071 -0.7071 0.7071 0.7071 10 20 Tm
+      0.0 0.0 1.0 rg
+      (Hello world) Tj
+      0.0 0.0 0.0 rg
+      ET
+      """
+
     end
   end
 
